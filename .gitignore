@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# build
+dist/
+build/
+
+# logs
+*.log
+logs/
+
+# Vite
+.vite/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# cache
+.cache/
