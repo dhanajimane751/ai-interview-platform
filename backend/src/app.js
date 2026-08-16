@@ -22,6 +22,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/interviews", require("./routes/interviewRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/companies", require("./routes/companyRoutes"));
+app.use("/api/speech", require("./routes/speechRoutes"));
 
 app.use(errorMiddleware);
 

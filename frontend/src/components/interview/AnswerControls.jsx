@@ -1,49 +1,76 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import useSpeechRecognition from "../../hooks/useSpeechRecognition";
+import useAudioRecorder from "../../hooks/useAudioRecorder";
+import axiosInstance from "../../api/axiosInstance";
 
 function AnswerControls({ question, onSubmitAnswer, disabled, isSpeaking }) {
-  const {
-    transcript = "",
-    isListening,
-    error,
-    startListening,
-    stopListening,
-    resetTranscript,
-  } = useSpeechRecognition();
+  const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+  const [transcribing, setTranscribing] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState("");
+  const [error, setError] = useState("");
+  const hasAutoStartedForQuestion = useRef(null);
 
-  const silenceTimer = useRef(null);
-  const hasStartedForQuestion = useRef(null);
-
-  // Auto-start listening once the AI finishes speaking the question
+  // Auto-start recording once the AI finishes speaking (with buffer, and only once per question)
   useEffect(() => {
-    if (!isSpeaking && question && hasStartedForQuestion.current !== question && !disabled) {
-      hasStartedForQuestion.current = question;
-      resetTranscript();
-      const delay = setTimeout(() => startListening(), 400);
+    if (!isSpeaking && question && hasAutoStartedForQuestion.current !== question && !disabled) {
+      hasAutoStartedForQuestion.current = question;
+      const delay = setTimeout(() => {
+        if (!isSpeaking) handleStart();
+      }, 800);
       return () => clearTimeout(delay);
     }
+    // eslint-disable-next-line
   }, [isSpeaking, question, disabled]);
 
-  // Auto-submit after ~3s of silence once user has said something
+  // Safety: force-stop recording if AI starts speaking again
   useEffect(() => {
-    if (transcript.trim()) {
-      clearTimeout(silenceTimer.current);
-      silenceTimer.current = setTimeout(() => {
-        stopListening();
-        onSubmitAnswer(transcript.trim());
-        resetTranscript();
-      }, 3000);
+    if (isSpeaking && isRecording) {
+      stopRecording();
     }
-    return () => clearTimeout(silenceTimer.current);
-  }, [transcript]);
+    // eslint-disable-next-line
+  }, [isSpeaking]);
 
-  const handleManualSubmit = () => {
-    if (transcript.trim()) {
-      clearTimeout(silenceTimer.current);
-      stopListening();
-      onSubmitAnswer(transcript.trim());
-      resetTranscript();
+  const handleStart = async () => {
+    try {
+      setError("");
+      setLastTranscript("");
+      await startRecording();
+    } catch (err) {
+      setError("Microphone access denied or unavailable.");
+    }
+  };
+
+  const handleStopAndSubmit = async () => {
+    const blob = await stopRecording();
+    if (!blob || blob.size < 1000) {
+      setError("No audio captured. Try speaking again.");
+      return;
+    }
+
+    try {
+      setTranscribing(true);
+      setError("");
+
+      const formData = new FormData();
+      formData.append("audio", blob, "answer.webm");
+
+      const res = await axiosInstance.post("/speech/transcribe", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const text = res.data.text?.trim();
+      if (!text) {
+        setError("Could not understand audio. Try again.");
+        setTranscribing(false);
+        return;
+      }
+
+      setLastTranscript(text);
+      setTranscribing(false);
+      onSubmitAnswer(text);
+    } catch (err) {
+      setTranscribing(false);
+      setError(err.response?.data?.message || "Transcription failed. Try again.");
     }
   };
 
@@ -51,22 +78,23 @@ function AnswerControls({ question, onSubmitAnswer, disabled, isSpeaking }) {
     <div className="w-full flex flex-col items-center gap-3">
       {error && <p className="text-danger text-xs">{error}</p>}
 
-      {/* Small transcript caption */}
       <div className="min-h-[40px] max-w-lg text-center">
-        {transcript ? (
-          <p className="text-slate-300 text-sm line-clamp-2">{transcript}</p>
+        {transcribing ? (
+          <p className="text-primary-400 text-sm">Transcribing your answer...</p>
+        ) : lastTranscript ? (
+          <p className="text-slate-300 text-sm line-clamp-2">{lastTranscript}</p>
         ) : (
           <p className="text-slate-600 text-sm italic">
-            {isListening ? "Listening for your answer..." : "Waiting..."}
+            {isSpeaking ? "Interviewer speaking..." : isRecording ? "Recording your answer..." : "Waiting..."}
           </p>
         )}
       </div>
 
       <div className="flex items-center gap-3">
-        {!isListening ? (
+        {!isRecording ? (
           <button
-            onClick={startListening}
-            disabled={disabled || isSpeaking}
+            onClick={handleStart}
+            disabled={disabled || isSpeaking || transcribing}
             className="flex items-center gap-2 btn-gradient text-white px-5 py-2.5 rounded-full font-medium disabled:opacity-40 shadow-glow text-sm"
           >
             <motion.span
@@ -78,21 +106,13 @@ function AnswerControls({ question, onSubmitAnswer, disabled, isSpeaking }) {
           </button>
         ) : (
           <button
-            onClick={stopListening}
+            onClick={handleStopAndSubmit}
             className="flex items-center gap-2 bg-danger hover:opacity-90 transition px-5 py-2.5 rounded-full font-medium text-sm"
           >
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            Stop
+            Stop & Submit
           </button>
         )}
-
-        <button
-          onClick={handleManualSubmit}
-          disabled={!transcript.trim() || disabled}
-          className="bg-base-900 border border-base-600 hover:border-primary-400 transition px-5 py-2.5 rounded-full font-medium disabled:opacity-30 text-sm"
-        >
-          Submit Answer
-        </button>
       </div>
     </div>
   );

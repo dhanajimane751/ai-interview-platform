@@ -10,42 +10,62 @@ function useTextToSpeech() {
       const available = window.speechSynthesis.getVoices();
       setVoices(available);
     };
-
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
-
-    return () => {
-      window.speechSynthesis.cancel();
-    };
+    return () => window.speechSynthesis.cancel();
   }, []);
+
+const getBestVoice = useCallback(() => {
+  const preferenceOrder = [
+    "Google UK English Male",
+    "Google UK English Female",
+    "Google US English",
+    "Microsoft Aria Online (Natural) - English (United States)",
+    "Microsoft Jenny Online (Natural) - English (United States)",
+    "Samantha",
+    "en-GB",
+    "en-US",
+  ];
+
+  for (const pref of preferenceOrder) {
+    const match = voices.find((v) => v.name.includes(pref) || v.lang === pref);
+    if (match) return match;
+  }
+  return voices[0];
+}, [voices]);
 
   const speak = useCallback(
     (text) => {
-      if (!text || !window.speechSynthesis) return;
+      return new Promise((resolve) => {
+        if (!text || !window.speechSynthesis) {
+          resolve();
+          return;
+        }
+        window.speechSynthesis.cancel();
 
-      window.speechSynthesis.cancel(); // stop any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.98;
+        utterance.pitch = 1.05;
+        utterance.volume = 1;
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      utterance.volume = 1;
+        const bestVoice = getBestVoice();
+        if (bestVoice) utterance.voice = bestVoice;
 
-      // Prefer a natural-sounding English voice if available
-      const preferredVoice =
-        voices.find((v) => v.name.includes("Google US English")) ||
-        voices.find((v) => v.lang === "en-US") ||
-        voices[0];
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => {
+          setIsSpeaking(false);
+          resolve();
+        };
+        utterance.onerror = () => {
+          setIsSpeaking(false);
+          resolve();
+        };
 
-      if (preferredVoice) utterance.voice = preferredVoice;
-
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-
-      utteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+        utteranceRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+      });
     },
-    [voices]
+    [getBestVoice]
   );
 
   const stopSpeaking = useCallback(() => {
@@ -53,7 +73,7 @@ function useTextToSpeech() {
     setIsSpeaking(false);
   }, []);
 
-  return { speak, stopSpeaking, isSpeaking };
+  return { speak, stopSpeaking, isSpeaking, voices };
 }
 
 export default useTextToSpeech;

@@ -8,6 +8,7 @@ import InterviewRoom from "./pages/InterviewRoom";
 import ReportPage from "./pages/ReportPage";
 import PublicRoute from "./routes/PublicRoute";
 import PrivateRoute from "./routes/PrivateRoute";
+import VoiceTest from "./pages/VoiceTest";
 
 function App() {
   return (
@@ -21,7 +22,9 @@ function App() {
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/interview/:interviewId" element={<PrivateRoute><InterviewRoom /></PrivateRoute>} />
         <Route path="/report/:interviewId" element={<PrivateRoute><ReportPage /></PrivateRoute>} />
+        <Route path="/voice-test" element={<VoiceTest />} />
       </Routes>
+      
     </>
   );
 }
