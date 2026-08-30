@@ -16,8 +16,14 @@ const userSchema = new mongoose.Schema(
     resume: { type: mongoose.Schema.Types.ObjectId, ref: "Resume" },
     streak: { type: Number, default: 0 },
     badges: [{ type: String }],
+    isVerified: { type: Boolean, default: false },
+    verificationToken: { type: String, select: false },
+    verificationTokenExpires: { type: Date, select: false },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
-  { timestamps: true }
+  { timestamps: true },
+
 );
 
 userSchema.pre("save", async function (next) {

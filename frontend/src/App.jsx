@@ -9,11 +9,19 @@ import ReportPage from "./pages/ReportPage";
 import PublicRoute from "./routes/PublicRoute";
 import PrivateRoute from "./routes/PrivateRoute";
 import VoiceTest from "./pages/VoiceTest";
-
+import VerifyEmail from "./pages/VerifyEmail";
+import React from "react";
+import Settings from "./pages/Settings";
+import CursorDot from "./components/common/CursorDot";
+import OAuthSuccess from "./pages/OAuthSuccess";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import SystemCheck from "./pages/SystemCheck";
 function App() {
   return (
     <>
       <Navbar />
+      <CursorDot />
       <Routes>
         <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -23,6 +31,12 @@ function App() {
         <Route path="/interview/:interviewId" element={<PrivateRoute><InterviewRoom /></PrivateRoute>} />
         <Route path="/report/:interviewId" element={<PrivateRoute><ReportPage /></PrivateRoute>} />
         <Route path="/voice-test" element={<VoiceTest />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} /> 
+        <Route path="/interview/:interviewId/check" element={<PrivateRoute><SystemCheck /></PrivateRoute>} />
       </Routes>
       
     </>

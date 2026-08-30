@@ -4,8 +4,21 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const { CLIENT_URL } = require("./config/env");
 const errorMiddleware = require("./middlewares/errorMiddleware");
+const session = require("express-session");
+const passport = require("./config/passport");
+
+
 
 const app = express();
+app.use(
+  session({
+    secret: require("./config/env").SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(helmet());
 app.use(cors({ origin: CLIENT_URL, credentials: true }));

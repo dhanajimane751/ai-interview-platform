@@ -1,5 +1,5 @@
 import useFaceDetection from "../../hooks/useFaceDetection";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
 import { motion } from "framer-motion";
 
@@ -11,6 +11,8 @@ const videoConstraints = {
 
 function WebcamPanel({ onStreamReady, onProctorWarning }) {
   const webcamRef = useRef(null);
+  const streamRef = useRef(null);
+  const audioContextRef = useRef(null);
   const [cameraError, setCameraError] = useState("");
   const [micActive, setMicActive] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -27,6 +29,7 @@ function WebcamPanel({ onStreamReady, onProctorWarning }) {
   const handleUserMedia = useCallback(
     (stream) => {
       setCameraError("");
+      streamRef.current = stream;
       setupMicMeter(stream);
       if (onStreamReady) onStreamReady(stream);
     },
@@ -40,6 +43,7 @@ function WebcamPanel({ onStreamReady, onProctorWarning }) {
 
   const setupMicMeter = (stream) => {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioContextRef.current = audioContext;
     const source = audioContext.createMediaStreamSource(stream);
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
@@ -48,14 +52,34 @@ function WebcamPanel({ onStreamReady, onProctorWarning }) {
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
     setMicActive(true);
 
+    let rafId;
     const updateLevel = () => {
       analyser.getByteFrequencyData(dataArray);
       const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
       setAudioLevel(avg);
-      requestAnimationFrame(updateLevel);
+      rafId = requestAnimationFrame(updateLevel);
     };
     updateLevel();
+
+    audioContextRef.current._rafId = rafId;
   };
+
+  // Cleanup: stop all camera/mic tracks and close audio context on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (audioContextRef.current) {
+        if (audioContextRef.current._rafId) {
+          cancelAnimationFrame(audioContextRef.current._rafId);
+        }
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="relative rounded-xl overflow-hidden bg-black w-full h-full">

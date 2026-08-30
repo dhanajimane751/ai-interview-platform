@@ -8,6 +8,8 @@ import axiosInstance from "../api/axiosInstance";
 import useTextToSpeech from "../hooks/useTextToSpeech";
 import useProctoring from "../hooks/useProctoring";
 import { motion, AnimatePresence } from "framer-motion";
+import { Mic, Camera, ShieldCheck } from "lucide-react";
+import AiFace from "../components/common/AiFace";
 
 function InterviewRoom() {
   const { interviewId } = useParams();
@@ -109,9 +111,9 @@ function InterviewRoom() {
             <div className="bg-slate-900/80 border border-slate-800/80 shadow-2xl backdrop-blur-xl rounded-3xl p-8 max-w-lg w-full text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500" />
 
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner">
-                🎙️
-              </div>
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-6 shadow-inner">
+  <Mic size={32} className="text-indigo-300" />
+</div>
 
               <h2 className="text-2xl font-bold tracking-tight text-white mb-2">
                 Ready for your AI Interview?
@@ -122,12 +124,12 @@ function InterviewRoom() {
               </p>
 
               <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800/60 text-xs text-slate-400 flex items-center justify-around mb-8">
-                <span className="flex items-center gap-1.5">📷 Camera Ready</span>
-                <span className="h-3 w-px bg-slate-800" />
-                <span className="flex items-center gap-1.5">🎙️ Mic Active</span>
-                <span className="h-3 w-px bg-slate-800" />
-                <span className="flex items-center gap-1.5">🛡️ Proctoring On</span>
-              </div>
+  <span className="flex items-center gap-1.5"><Camera size={14} /> Camera Ready</span>
+  <span className="h-3 w-px bg-slate-800" />
+  <span className="flex items-center gap-1.5"><Mic size={14} /> Mic Active</span>
+  <span className="h-3 w-px bg-slate-800" />
+  <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Proctoring On</span>
+</div>
 
               <button
                 onClick={handleBeginClick}
@@ -205,14 +207,15 @@ function InterviewRoom() {
               You (Candidate)
             </div>
             {hasStarted && (
+              
               <WebcamPanel
                 onStreamReady={(stream) => setMediaStream(stream)}
                 onProctorWarning={(message) => addWarning(message)}
               />
+              
             )}
           </motion.div>
         </div>
-
         {/* Question display card */}
         <div className="bg-slate-900/80 border border-slate-800/80 backdrop-blur-md rounded-xl p-4 md:p-5 text-center shadow-lg relative overflow-hidden">
           <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-1">

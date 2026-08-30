@@ -9,4 +9,10 @@ module.exports = {
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   GROQ_MODEL: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASS: process.env.EMAIL_PASS,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+  SESSION_SECRET: process.env.SESSION_SECRET || "session_secret",
 };

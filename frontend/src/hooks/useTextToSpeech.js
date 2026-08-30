@@ -16,17 +16,20 @@ function useTextToSpeech() {
   }, []);
 
 const getBestVoice = useCallback(() => {
+  const savedVoiceName = JSON.parse(localStorage.getItem("uiPrefs") || "{}").preferredVoice;
+  if (savedVoiceName) {
+    const exact = voices.find((v) => v.name === savedVoiceName);
+    if (exact) return exact;
+  }
+
   const preferenceOrder = [
     "Google UK English Male",
     "Google UK English Female",
     "Google US English",
-    "Microsoft Aria Online (Natural) - English (United States)",
-    "Microsoft Jenny Online (Natural) - English (United States)",
     "Samantha",
     "en-GB",
     "en-US",
   ];
-
   for (const pref of preferenceOrder) {
     const match = voices.find((v) => v.name.includes(pref) || v.lang === pref);
     if (match) return match;
