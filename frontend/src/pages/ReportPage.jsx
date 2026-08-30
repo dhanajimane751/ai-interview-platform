@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
+
 import {
   RadarChart,
   PolarGrid,
@@ -9,10 +10,25 @@ import {
   Radar,
   ResponsiveContainer,
 } from "recharts";
+
 import { motion } from "framer-motion";
+
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CheckCircle2,
+  AlertTriangle,
+  Sparkles,
+  Target,
+  TrendingUp,
+  BriefcaseBusiness,
+  Clock3,
+  MessageSquareText,
+} from "lucide-react";
 
 function ReportPage() {
   const { interviewId } = useParams();
+
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,130 +41,864 @@ function ReportPage() {
     try {
       setLoading(true);
       setError("");
+
       try {
-        const res = await axiosInstance.get(`/reports/${interviewId}`);
+        const res = await axiosInstance.get(
+          `/reports/${interviewId}`
+        );
+
         setReport(res.data.report);
       } catch {
-        const genRes = await axiosInstance.post(`/reports/${interviewId}/generate`);
+        const genRes = await axiosInstance.post(
+          `/reports/${interviewId}/generate`
+        );
+
         setReport(genRes.data.report);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load report");
+      setError(
+        err.response?.data?.message ||
+          "Failed to load report"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const radarData = useMemo(() => {
+    if (!report) return [];
+
+    return [
+      {
+        subject: "Technical",
+        value: report.technicalScore || 0,
+      },
+      {
+        subject: "Communication",
+        value: report.communicationScore || 0,
+      },
+      {
+        subject: "Confidence",
+        value: report.confidenceScore || 0,
+      },
+      {
+        subject: "Grammar",
+        value: report.grammarScore || 0,
+      },
+      {
+        subject: "Professionalism",
+        value: report.professionalismScore || 0,
+      },
+      {
+        subject: "Time Mgmt",
+        value: report.timeManagementScore || 0,
+      },
+    ];
+  }, [report]);
+
+  const scoreItems = useMemo(() => {
+    if (!report) return [];
+
+    return [
+      {
+        label: "Technical",
+        value: report.technicalScore || 0,
+      },
+      {
+        label: "Communication",
+        value: report.communicationScore || 0,
+      },
+      {
+        label: "Confidence",
+        value: report.confidenceScore || 0,
+      },
+      {
+        label: "Grammar",
+        value: report.grammarScore || 0,
+      },
+      {
+        label: "Professionalism",
+        value: report.professionalismScore || 0,
+      },
+      {
+        label: "Time Management",
+        value: report.timeManagementScore || 0,
+      },
+    ];
+  }, [report]);
+
+  const scoreColor = (score) => {
+    if (score >= 85) return "text-mint";
+    if (score >= 70) return "text-signal";
+    if (score >= 50) return "text-warn";
+    return "text-danger";
+  };
+
+  const scoreBar = (score) => {
+    if (score >= 85) return "bg-mint";
+    if (score >= 70) return "bg-signal";
+    if (score >= 50) return "bg-warn";
+    return "bg-danger";
+  };
+
+  const getPerformanceLabel = (score) => {
+    if (score >= 90) return "Exceptional";
+    if (score >= 80) return "Strong";
+    if (score >= 70) return "Good";
+    if (score >= 60) return "Developing";
+    return "Needs work";
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <div className="w-14 h-14 rounded-full signature-ring p-[3px] animate-ring-spin">
-          <div className="w-full h-full rounded-full bg-base-950" />
+      <div className="min-h-screen bg-base-950 text-ink flex items-center justify-center px-6">
+        <div className="text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-base-700 bg-base-900">
+            <div className="h-9 w-9 rounded-full border-2 border-base-700 border-t-signal animate-spin" />
+          </div>
+
+          <h2 className="font-display text-xl font-semibold">
+            Preparing your report
+          </h2>
+
+          <p className="mt-2 text-sm text-ink-muted">
+            AI is analyzing your interview performance...
+          </p>
         </div>
-        <p className="text-slate-400">Analyzing your interview...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-danger">{error}</p>
+      <div className="min-h-screen bg-base-950 text-ink flex items-center justify-center px-6">
+        <div className="w-full max-w-md rounded-2xl border border-danger/20 bg-danger/5 p-7 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-danger/10">
+            <AlertTriangle
+              size={22}
+              className="text-danger"
+            />
+          </div>
+
+          <h2 className="font-display text-xl font-semibold">
+            Unable to load report
+          </h2>
+
+          <p className="mt-2 text-sm text-ink-muted">
+            {error}
+          </p>
+
+          <button
+            onClick={fetchOrGenerateReport}
+            className="mt-5 rounded-xl bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
 
-  const radarData = [
-    { subject: "Technical", value: report.technicalScore },
-    { subject: "Communication", value: report.communicationScore },
-    { subject: "Confidence", value: report.confidenceScore },
-    { subject: "Grammar", value: report.grammarScore },
-    { subject: "Professionalism", value: report.professionalismScore },
-    { subject: "Time Mgmt", value: report.timeManagementScore },
-  ];
+  if (!report) return null;
+
+  const overallScore = report.overallScore || 0;
 
   return (
-    <div className="min-h-screen px-6 py-10 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="font-display text-2xl font-bold">Interview Report</h1>
-        <Link to="/dashboard" className="text-primary-400 text-sm hover:text-primary-300">
-          ← Back to Dashboard
-        </Link>
+    <div className="min-h-screen bg-base-950 text-ink">
+
+      {/* Background glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-[-260px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-signal/[0.025] blur-[120px]" />
       </div>
 
-      {/* Overall Score Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-2xl p-8 mb-8 text-center relative overflow-hidden"
-      >
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-72 bg-glow-radial blur-2xl" />
-        <p className="text-slate-400 mb-2 relative">Overall Score</p>
-        <p className="font-display text-6xl font-bold bg-clip-text text-transparent bg-signature-gradient relative">
-          {report.overallScore}
-        </p>
-        <div className="flex justify-center gap-8 mt-4 relative">
-          <div>
-            <p className="text-slate-500 text-xs">Expected Rating</p>
-            <p className="font-medium">{report.expectedRating}</p>
+      <div className="relative z-10">
+
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
+
+        <header className="border-b border-base-800 bg-base-950/90 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-6">
+
+            <Link
+              to="/dashboard"
+              className="group flex items-center gap-2.5 text-sm text-ink-muted transition hover:text-ink"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-base-700 bg-base-900 transition group-hover:border-base-600">
+                <ArrowLeft size={15} />
+              </div>
+
+              <span className="hidden sm:inline">
+                Back to dashboard
+              </span>
+            </Link>
+
+            <div className="text-right">
+              <p className="font-display text-sm font-semibold">
+                Interview Report
+              </p>
+
+              <div className="mt-0.5 flex items-center justify-end gap-1.5 text-[10px] text-mint">
+                <CheckCircle2 size={11} />
+                Analysis complete
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-slate-500 text-xs">Hiring Probability</p>
-            <p className="font-medium">{report.hiringProbability}%</p>
+        </header>
+
+        {/* ================================================= */}
+        {/* CONTENT */}
+        {/* ================================================= */}
+
+        <main className="mx-auto max-w-6xl px-5 py-7 sm:px-6 sm:py-10">
+
+          {/* ================================================= */}
+          {/* HERO */}
+          {/* ================================================= */}
+
+          <motion.section
+            initial={{
+              opacity: 0,
+              y: 14,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.45,
+            }}
+            className="grid gap-5 lg:grid-cols-[310px_1fr]"
+          >
+
+            {/* Score */}
+            <div className="relative overflow-hidden rounded-2xl border border-base-700 bg-base-900 p-6">
+
+              <div className="absolute right-[-50px] top-[-50px] h-40 w-40 rounded-full bg-signal/[0.05] blur-3xl" />
+
+              <div className="relative">
+                <div className="mb-5 flex items-center justify-between">
+                  <span className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+                    Overall score
+                  </span>
+
+                  <Target
+                    size={17}
+                    className="text-signal"
+                  />
+                </div>
+
+                <div className="flex items-end gap-2">
+                  <span className="font-display text-7xl font-bold tracking-tight">
+                    {overallScore}
+                  </span>
+
+                  <span className="pb-2 text-sm text-ink-muted">
+                    / 100
+                  </span>
+                </div>
+
+                <div className="mt-4">
+                  <div className="h-2 overflow-hidden rounded-full bg-base-800">
+                    <motion.div
+                      initial={{
+                        width: 0,
+                      }}
+                      animate={{
+                        width: `${overallScore}%`,
+                      }}
+                      transition={{
+                        duration: 0.8,
+                        delay: 0.15,
+                      }}
+                      className={`h-full rounded-full ${scoreBar(
+                        overallScore
+                      )}`}
+                    />
+                  </div>
+
+                  <div className="mt-2 flex justify-between text-[10px] text-ink-muted">
+                    <span>0</span>
+                    <span>50</span>
+                    <span>75</span>
+                    <span>100</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 border-t border-base-800 pt-5">
+                  <p
+                    className={`text-sm font-semibold ${scoreColor(
+                      overallScore
+                    )}`}
+                  >
+                    {getPerformanceLabel(overallScore)} performance
+                  </p>
+
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                    Based on your overall technical and communication performance.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="rounded-2xl border border-base-700 bg-base-900 p-6 sm:p-7">
+
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-signal" />
+
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-signal">
+                      Interview assessment
+                    </span>
+                  </div>
+
+                  <h2 className="font-display text-2xl font-semibold">
+                    Here's how you performed
+                  </h2>
+
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-muted">
+                    Your interview has been evaluated across technical ability,
+                    communication, confidence, professionalism, grammar, and
+                    time management.
+                  </p>
+                </div>
+
+                <div className="flex-shrink-0 rounded-xl border border-mint/20 bg-mint/5 px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-wide text-ink-muted">
+                    Expected rating
+                  </p>
+
+                  <p className="mt-1 text-lg font-semibold text-mint">
+                    {report.expectedRating || "—"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-3">
+
+                <StatCard
+                  icon={BriefcaseBusiness}
+                  label="Expected rating"
+                  value={report.expectedRating || "—"}
+                />
+
+                <StatCard
+                  icon={TrendingUp}
+                  label="Hiring probability"
+                  value={`${report.hiringProbability || 0}%`}
+                />
+
+                <StatCard
+                  icon={MessageSquareText}
+                  label="Communication"
+                  value={`${report.communicationScore || 0}/100`}
+                />
+              </div>
+            </div>
+          </motion.section>
+
+          {/* ================================================= */}
+          {/* PERFORMANCE */}
+          {/* ================================================= */}
+
+          <motion.section
+            initial={{
+              opacity: 0,
+              y: 14,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.45,
+              delay: 0.1,
+            }}
+            className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]"
+          >
+
+            {/* Radar */}
+            <div className="rounded-2xl border border-base-700 bg-base-900 p-5 sm:p-6">
+
+              <div className="mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                  Performance overview
+                </p>
+
+                <h2 className="mt-1 font-display text-lg font-semibold">
+                  Skill profile
+                </h2>
+              </div>
+
+              <div className="h-[310px] w-full">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <RadarChart
+                    data={radarData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="68%"
+                  >
+                    <PolarGrid
+                      stroke="#283044"
+                    />
+
+                    <PolarAngleAxis
+                      dataKey="subject"
+                      stroke="#94a3b8"
+                      tick={{
+                        fontSize: 11,
+                      }}
+                    />
+
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 100]}
+                      tick={{
+                        fontSize: 9,
+                        fill: "#64748b",
+                      }}
+                      axisLine={false}
+                    />
+
+                    <Radar
+                      name="Score"
+                      dataKey="value"
+                      stroke="#8B5CF6"
+                      fill="#8B5CF6"
+                      fillOpacity={0.25}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Score breakdown */}
+            <div className="rounded-2xl border border-base-700 bg-base-900 p-5 sm:p-6">
+
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                    Detailed breakdown
+                  </p>
+
+                  <h2 className="mt-1 font-display text-lg font-semibold">
+                    Competency scores
+                  </h2>
+                </div>
+
+                <span className="rounded-full border border-base-700 bg-base-950 px-3 py-1.5 text-[10px] text-ink-muted">
+                  6 dimensions
+                </span>
+              </div>
+
+              <div className="space-y-5">
+                {scoreItems.map((item, index) => (
+                  <ScoreBar
+                    key={item.label}
+                    {...item}
+                    index={index}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.section>
+
+          {/* ================================================= */}
+          {/* STRENGTHS / WEAKNESSES */}
+          {/* ================================================= */}
+
+          <section className="mt-6 grid gap-5 md:grid-cols-2">
+
+            <InsightCard
+              type="strength"
+              title="Your strengths"
+              icon={CheckCircle2}
+              items={report.strengths}
+            />
+
+            <InsightCard
+              type="weakness"
+              title="Areas to improve"
+              icon={AlertTriangle}
+              items={report.weaknesses}
+            />
+
+          </section>
+
+          {/* ================================================= */}
+          {/* RECOMMENDATIONS */}
+          {/* ================================================= */}
+
+          <motion.section
+            initial={{
+              opacity: 0,
+              y: 12,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            className="mt-6 rounded-2xl border border-base-700 bg-base-900 p-5 sm:p-6"
+          >
+
+            <div className="flex items-start gap-4">
+
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-signal/10 text-signal">
+                <ArrowUpRight size={19} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                  Next steps
+                </p>
+
+                <h2 className="mt-1 font-display text-lg font-semibold">
+                  Recommended improvements
+                </h2>
+
+                <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">
+                  Focus on these areas before your next interview.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {report.recommendedImprovements?.length ? (
+                report.recommendedImprovements.map(
+                  (item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{
+                        opacity: 0,
+                        y: 8,
+                      }}
+                      whileInView={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      viewport={{
+                        once: true,
+                      }}
+                      transition={{
+                        delay: index * 0.06,
+                      }}
+                      className="flex gap-3 rounded-xl border border-base-800 bg-base-950/50 p-4"
+                    >
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-signal/10 text-[10px] font-semibold text-signal">
+                        {index + 1}
+                      </span>
+
+                      <p className="text-sm leading-relaxed text-ink-muted">
+                        {item}
+                      </p>
+                    </motion.div>
+                  )
+                )
+              ) : (
+                <p className="text-sm text-ink-muted">
+                  No specific improvements were generated.
+                </p>
+              )}
+            </div>
+          </motion.section>
+
+          {/* ================================================= */}
+          {/* AI SUGGESTIONS */}
+          {/* ================================================= */}
+
+          <motion.section
+            initial={{
+              opacity: 0,
+              y: 12,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            className="relative mt-6 overflow-hidden rounded-2xl border border-signal/20 bg-signal/[0.035] p-6 sm:p-7"
+          >
+
+            <div className="absolute right-[-70px] top-[-70px] h-56 w-56 rounded-full bg-signal/[0.055] blur-3xl" />
+
+            <div className="relative flex items-start gap-4">
+
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-signal/10 text-signal">
+                <Sparkles size={20} />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-signal">
+                    AI coach
+                  </p>
+
+                  <span className="rounded-full border border-signal/20 bg-signal/5 px-2 py-0.5 text-[9px] text-signal">
+                    Personalized
+                  </span>
+                </div>
+
+                <h2 className="mt-1 font-display text-xl font-semibold">
+                  Your personalized feedback
+                </h2>
+
+                <p className="mt-4 max-w-3xl text-sm leading-7 text-ink-muted">
+                  {report.aiSuggestions ||
+                    "Keep practicing and use the performance breakdown above to focus your preparation."}
+                </p>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* ================================================= */}
+          {/* CTA */}
+          {/* ================================================= */}
+
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-base-800 pt-6 sm:flex-row">
+
+            <div>
+              <p className="text-sm font-medium">
+                Ready for another round?
+              </p>
+
+              <p className="mt-1 text-xs text-ink-muted">
+                Practice again and compare your improvement over time.
+              </p>
+            </div>
+
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-2 rounded-xl bg-signal px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            >
+              Back to dashboard
+              <ArrowRightIcon />
+            </Link>
           </div>
-        </div>
-      </motion.div>
-
-      {/* Radar Chart */}
-      <div className="glass-card rounded-2xl p-8 mb-8">
-        <h2 className="font-display text-lg font-semibold mb-4">Performance Breakdown</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <RadarChart data={radarData}>
-            <PolarGrid stroke="#2A3350" />
-            <PolarAngleAxis dataKey="subject" stroke="#94a3b8" fontSize={12} />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#2A3350" />
-            <Radar name="Score" dataKey="value" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.4} />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Strengths & Weaknesses */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="glass-card rounded-2xl p-6">
-          <h3 className="text-success font-semibold mb-3 font-display">Strengths</h3>
-          <ul className="space-y-2 text-sm text-slate-300 list-disc list-inside">
-            {report.strengths?.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="glass-card rounded-2xl p-6">
-          <h3 className="text-danger font-semibold mb-3 font-display">Weaknesses</h3>
-          <ul className="space-y-2 text-sm text-slate-300 list-disc list-inside">
-            {report.weaknesses?.map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Recommendations */}
-      <div className="glass-card rounded-2xl p-6 mb-8">
-        <h3 className="font-display font-semibold mb-3">Recommended Improvements</h3>
-        <ul className="space-y-2 text-sm text-slate-300 list-disc list-inside">
-          {report.recommendedImprovements?.map((r, i) => (
-            <li key={i}>{r}</li>
-          ))}
-        </ul>
-      </div>
-
-      {/* AI Suggestions */}
-      <div className="glass-card rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-glow-radial blur-2xl" />
-        <h3 className="font-display font-semibold mb-3 relative">AI Suggestions</h3>
-        <p className="text-sm text-slate-300 relative">{report.aiSuggestions}</p>
+        </main>
       </div>
     </div>
+  );
+}
+
+/* ========================================================= */
+/* STAT CARD */
+/* ========================================================= */
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-xl border border-base-800 bg-base-950/50 p-4">
+      <div className="flex items-center gap-2 text-ink-muted">
+        <Icon size={13} />
+
+        <span className="text-[10px]">
+          {label}
+        </span>
+      </div>
+
+      <p className="mt-2 text-base font-semibold">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/* ========================================================= */
+/* SCORE BAR */
+/* ========================================================= */
+
+function ScoreBar({
+  label,
+  value,
+  index,
+}) {
+  const score =
+    typeof value === "number"
+      ? value
+      : Number(value) || 0;
+
+  let barColor = "bg-danger";
+  let textColor = "text-danger";
+
+  if (score >= 85) {
+    barColor = "bg-mint";
+    textColor = "text-mint";
+  } else if (score >= 70) {
+    barColor = "bg-signal";
+    textColor = "text-signal";
+  } else if (score >= 50) {
+    barColor = "bg-warn";
+    textColor = "text-warn";
+  }
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 10,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      transition={{
+        delay: index * 0.05,
+      }}
+    >
+      <div className="mb-2 flex items-center justify-between">
+
+        <span className="text-sm font-medium">
+          {label}
+        </span>
+
+        <span
+          className={`font-mono-data text-xs font-semibold ${textColor}`}
+        >
+          {score}/100
+        </span>
+      </div>
+
+      <div className="h-2 overflow-hidden rounded-full bg-base-800">
+        <motion.div
+          initial={{
+            width: 0,
+          }}
+          animate={{
+            width: `${score}%`,
+          }}
+          transition={{
+            duration: 0.7,
+            delay: 0.1 + index * 0.05,
+          }}
+          className={`h-full rounded-full ${barColor}`}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+/* ========================================================= */
+/* INSIGHT CARD */
+/* ========================================================= */
+
+function InsightCard({
+  type,
+  title,
+  icon: Icon,
+  items,
+}) {
+  const isStrength = type === "strength";
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 10,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+      }}
+      className={`rounded-2xl border p-5 sm:p-6 ${
+        isStrength
+          ? "border-mint/15 bg-mint/[0.025]"
+          : "border-danger/15 bg-danger/[0.025]"
+      }`}
+    >
+
+      <div className="flex items-center gap-3">
+
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+            isStrength
+              ? "bg-mint/10 text-mint"
+              : "bg-danger/10 text-danger"
+          }`}
+        >
+          <Icon size={18} />
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+            {isStrength
+              ? "Positive signals"
+              : "Growth opportunities"}
+          </p>
+
+          <h3 className="mt-0.5 font-display text-lg font-semibold">
+            {title}
+          </h3>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {items?.length ? (
+          items.map((item, index) => (
+            <div
+              key={index}
+              className="flex gap-3"
+            >
+              <span
+                className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                  isStrength
+                    ? "bg-mint"
+                    : "bg-danger"
+                }`}
+              />
+
+              <p className="text-sm leading-relaxed text-ink-muted">
+                {item}
+              </p>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-ink-muted">
+            No specific points were provided.
+          </p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ========================================================= */
+/* ARROW ICON */
+/* ========================================================= */
+
+function ArrowRightIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
   );
 }
 
