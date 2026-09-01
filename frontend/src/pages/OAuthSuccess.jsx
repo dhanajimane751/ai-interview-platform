@@ -1,40 +1,126 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../redux/slices/authSlice";
-import axiosInstance from "../api/axiosInstance";
 import toast from "react-hot-toast";
+import {
+  setCredentials,
+} from "../redux/slices/authSlice";
+import axiosInstance from "../api/axiosInstance";
 
 function OAuthSuccess() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [searchParams] =
+    useSearchParams();
+
+  const navigate =
+    useNavigate();
+
+  const dispatch =
+    useDispatch();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token =
+      searchParams.get("token");
+
     if (!token) {
-      navigate("/login");
+      toast.error(
+        "Google login failed",
+        {
+          id: "google-login-error",
+        }
+      );
+
+      navigate("/login", {
+        replace: true,
+      });
+
       return;
     }
 
-    localStorage.setItem("accessToken", token);
+    const processedKey =
+      `google-oauth-${token}`;
+
+    if (
+      sessionStorage.getItem(
+        processedKey
+      )
+    ) {
+      navigate("/dashboard", {
+        replace: true,
+      });
+
+      return;
+    }
+
+    sessionStorage.setItem(
+      processedKey,
+      "true"
+    );
+
+    localStorage.setItem(
+      "accessToken",
+      token
+    );
 
     axiosInstance
       .get("/auth/me")
       .then((res) => {
-        dispatch(setCredentials({ user: res.data.user, accessToken: token }));
-        toast.success("Logged in with Google");
-        navigate("/dashboard");
+        dispatch(
+          setCredentials({
+            user: res.data.user,
+            accessToken: token,
+          })
+        );
+
+        toast.success(
+          "Logged in with Google",
+          {
+            id: "google-login-success",
+          }
+        );
+
+        navigate("/dashboard", {
+          replace: true,
+        });
       })
-      .catch(() => {
-        toast.error("Google login failed");
-        navigate("/login");
+      .catch((error) => {
+        console.error(
+          "Google authentication error:",
+          error
+        );
+
+        sessionStorage.removeItem(
+          processedKey
+        );
+
+        localStorage.removeItem(
+          "accessToken"
+        );
+
+        toast.error(
+          "Google login failed",
+          {
+            id: "google-login-error",
+          }
+        );
+
+        navigate("/login", {
+          replace: true,
+        });
       });
-  }, []);
+  }, [
+    searchParams,
+    navigate,
+    dispatch,
+  ]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-ink-muted text-sm">Signing you in...</p>
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-sm text-ink-muted">
+        Signing you in...
+      </p>
     </div>
   );
 }

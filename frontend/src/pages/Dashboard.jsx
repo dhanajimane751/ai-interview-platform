@@ -29,23 +29,48 @@ function Dashboard() {
     }
   };
 
-  const handleStartInterview = async ({ role, companyId, difficulty, interviewType }) => {
+const handleStartInterview = async (formData) => {
     try {
-      setError("");
-      const res = await axiosInstance.post("/interviews/start", {
-        role,
-        companyId,
-        difficulty,
-        interviewType,
-      });
-      navigate(`/interview/${res.data.interviewId}/check`, {
-        state: { firstQuestion: res.data.question },
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to start interview");
-      setShowModal(false);
+        setError("");
+
+        const response =
+            await axiosInstance.post(
+                "/interviews/start",
+                formData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data",
+                    },
+                }
+            );
+
+        navigate(
+            `/interview/${response.data.interviewId}/check`,
+            {
+                state: {
+                    firstQuestion:
+                        response.data.question,
+                },
+            }
+        );
+    } catch (error) {
+        console.error(
+            "Start interview error:",
+            error.response?.data
+        );
+
+        setError(
+            error.response?.data?.errors?.[0]
+                ?.msg ||
+                error.response?.data
+                    ?.message ||
+                "Failed to start interview"
+        );
+
+        setShowModal(false);
     }
-  };
+};
 
   const completedCount = history.filter((h) => h.status === "completed").length;
   const scored = history.filter((h) => h.report?.overallScore != null);

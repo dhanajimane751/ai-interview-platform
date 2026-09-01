@@ -1,5 +1,10 @@
 import useFaceDetection from "../../hooks/useFaceDetection";
-import { useRef, useState, useCallback, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import Webcam from "react-webcam";
 import { motion } from "framer-motion";
 
@@ -9,118 +14,264 @@ const videoConstraints = {
   facingMode: "user",
 };
 
-function WebcamPanel({ onStreamReady, onProctorWarning }) {
+function WebcamPanel({
+  onStreamReady,
+  onProctorWarning,
+}) {
   const webcamRef = useRef(null);
   const streamRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const [cameraError, setCameraError] = useState("");
-  const [micActive, setMicActive] = useState(false);
-  const [audioLevel, setAudioLevel] = useState(0);
+  const audioContextRef =
+    useRef(null);
 
-  const handleProctorWarning = useCallback(
-    (message) => {
-      if (onProctorWarning) onProctorWarning(message);
-    },
-    [onProctorWarning]
+  const [cameraError, setCameraError] =
+    useState("");
+
+  const [micActive, setMicActive] =
+    useState(false);
+
+  const [audioLevel, setAudioLevel] =
+    useState(0);
+
+  const handleProctorWarning =
+    useCallback(
+      (event) => {
+        onProctorWarning?.(event);
+      },
+      [onProctorWarning]
+    );
+
+  const {
+    modelsLoaded,
+    faceCount,
+  } = useFaceDetection(
+    webcamRef,
+    handleProctorWarning
   );
 
-  const { modelsLoaded, faceCount } = useFaceDetection(webcamRef, handleProctorWarning);
+  const setupMicMeter =
+    useCallback((stream) => {
+      try {
+        const AudioContext =
+          window.AudioContext ||
+          window.webkitAudioContext;
 
-  const handleUserMedia = useCallback(
-    (stream) => {
-      setCameraError("");
-      streamRef.current = stream;
-      setupMicMeter(stream);
-      if (onStreamReady) onStreamReady(stream);
-    },
-    [onStreamReady]
-  );
+        if (!AudioContext) {
+          return;
+        }
 
-  const handleUserMediaError = useCallback((err) => {
-    console.error("Webcam error:", err);
-    setCameraError("Camera/Microphone access denied or unavailable.");
-  }, []);
+        const audioContext =
+          new AudioContext();
 
-  const setupMicMeter = (stream) => {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioContextRef.current = audioContext;
-    const source = audioContext.createMediaStreamSource(stream);
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
+        audioContextRef.current =
+          audioContext;
 
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-    setMicActive(true);
+        const source =
+          audioContext.createMediaStreamSource(
+            stream
+          );
 
-    let rafId;
-    const updateLevel = () => {
-      analyser.getByteFrequencyData(dataArray);
-      const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      setAudioLevel(avg);
-      rafId = requestAnimationFrame(updateLevel);
-    };
-    updateLevel();
+        const analyser =
+          audioContext.createAnalyser();
 
-    audioContextRef.current._rafId = rafId;
-  };
+        analyser.fftSize = 256;
 
-  // Cleanup: stop all camera/mic tracks and close audio context on unmount
+        source.connect(analyser);
+
+        const dataArray =
+          new Uint8Array(
+            analyser.frequencyBinCount
+          );
+
+        setMicActive(true);
+
+        let rafId;
+
+        const updateLevel = () => {
+          if (
+            !audioContextRef.current
+          ) {
+            return;
+          }
+
+          analyser.getByteFrequencyData(
+            dataArray
+          );
+
+          const average =
+            dataArray.reduce(
+              (sum, value) =>
+                sum + value,
+              0
+            ) / dataArray.length;
+
+          setAudioLevel(average);
+
+          rafId =
+            requestAnimationFrame(
+              updateLevel
+            );
+        };
+
+        updateLevel();
+
+        audioContextRef.current._rafId =
+          rafId;
+      } catch (error) {
+        console.error(
+          "Microphone meter error:",
+          error
+        );
+
+        onProctorWarning?.({
+          type: "microphone_error",
+          message:
+            "Microphone monitoring could not be started.",
+        });
+      }
+    }, [onProctorWarning]);
+
+  const handleUserMedia =
+    useCallback(
+      (stream) => {
+        setCameraError("");
+
+        streamRef.current =
+          stream;
+
+        setupMicMeter(stream);
+
+        onStreamReady?.(stream);
+      },
+      [
+        onStreamReady,
+        setupMicMeter,
+      ]
+    );
+
+  const handleUserMediaError =
+    useCallback(
+      (error) => {
+        console.error(
+          "Webcam error:",
+          error
+        );
+
+        setCameraError(
+          "Camera/Microphone access denied or unavailable."
+        );
+
+        onProctorWarning?.({
+          type: "camera_error",
+          message:
+            "Camera or microphone access was denied or unavailable.",
+        });
+      },
+      [onProctorWarning]
+    );
+
   useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
+
         streamRef.current = null;
       }
-      if (audioContextRef.current) {
-        if (audioContextRef.current._rafId) {
-          cancelAnimationFrame(audioContextRef.current._rafId);
+
+      if (
+        audioContextRef.current
+      ) {
+        if (
+          audioContextRef.current
+            ._rafId
+        ) {
+          cancelAnimationFrame(
+            audioContextRef.current
+              ._rafId
+          );
         }
-        audioContextRef.current.close().catch(() => {});
-        audioContextRef.current = null;
+
+        audioContextRef.current
+          .close()
+          .catch(() => {});
+
+        audioContextRef.current =
+          null;
       }
     };
   }, []);
 
   return (
-    <div className="relative rounded-xl overflow-hidden bg-black w-full h-full">
+    <div className="relative h-full w-full overflow-hidden rounded-xl bg-black">
       {cameraError ? (
-        <div className="flex items-center justify-center h-full text-red-400 text-sm text-center px-4">
+        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-red-400">
           {cameraError}
         </div>
       ) : (
         <Webcam
           ref={webcamRef}
-          audio={true}
-          muted={true}
-          videoConstraints={videoConstraints}
-          onUserMedia={handleUserMedia}
-          onUserMediaError={handleUserMediaError}
-          className="w-full h-full object-cover"
+          audio
+          muted
+          videoConstraints={
+            videoConstraints
+          }
+          onUserMedia={
+            handleUserMedia
+          }
+          onUserMediaError={
+            handleUserMediaError
+          }
+          className="h-full w-full object-cover"
         />
       )}
 
       {modelsLoaded && (
-        <div className="absolute bottom-2 right-2 bg-black/50 px-2 py-1 rounded-lg">
-          <span className={`text-xs ${faceCount === 1 ? "text-green-400" : "text-red-400"}`}>
-            {faceCount === 0 ? "No face" : faceCount === 1 ? "Face OK" : `${faceCount} faces`}
+        <div className="absolute bottom-2 right-2 rounded-lg bg-black/60 px-2 py-1">
+          <span
+            className={`text-xs ${
+              faceCount === 1
+                ? "text-green-400"
+                : "text-red-400"
+            }`}
+          >
+            {faceCount === 0
+              ? "No face"
+              : faceCount === 1
+              ? "Face OK"
+              : `${faceCount} faces`}
           </span>
         </div>
       )}
 
       {micActive && (
-        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 px-2 py-1 rounded-lg">
+        <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1">
           <motion.div
-            animate={{ scale: 1 + audioLevel / 150 }}
-            transition={{ duration: 0.1 }}
-            className="w-2 h-2 rounded-full bg-green-400"
+            animate={{
+              scale:
+                1 +
+                audioLevel / 150,
+            }}
+            transition={{
+              duration: 0.1,
+            }}
+            className="h-2 w-2 rounded-full bg-green-400"
           />
-          <span className="text-xs text-slate-300">Mic</span>
+
+          <span className="text-xs text-slate-300">
+            Mic
+          </span>
         </div>
       )}
 
-      <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/50 px-2 py-1 rounded-lg">
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse-slow" />
-        <span className="text-xs text-slate-300">Live</span>
+      <div className="absolute right-2 top-2 flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+
+        <span className="text-xs text-slate-300">
+          Live
+        </span>
       </div>
     </div>
   );

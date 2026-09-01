@@ -191,7 +191,7 @@ export default function Register() {
             </div>
 
 
-            <a href="/api/auth/google"
+            <a href={`${import.meta.env.VITE_API_URL?.replace("/api", "") || ""}/api/auth/google`}
               className="w-full flex items-center justify-center gap-2.5 border border-base-700 hover:border-base-600 rounded-lg py-3 text-sm font-medium text-ink transition"
             >
               <svg width="17" height="17" viewBox="0 0 24 24">

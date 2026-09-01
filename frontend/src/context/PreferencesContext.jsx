@@ -5,7 +5,7 @@ const PreferencesContext = createContext();
 const defaults = {
   reduceMotion: false,
   compactLayout: false,
-  preferredVoice: "",
+  preferredVoice: "Google UK English Male",
   themePreset: "midnight",
   cursorStyle: "default",
 };

@@ -17,6 +17,8 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import SystemCheck from "./pages/SystemCheck";
+import Profile from "./pages/Profile";
+import Resume from "./pages/Resume";
 function App() {
   return (
     <>
@@ -37,6 +39,15 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} /> 
         <Route path="/interview/:interviewId/check" element={<PrivateRoute><SystemCheck /></PrivateRoute>} />
+        <Route path="/profile" element={<Profile />} />
+        <Route
+    path="/resume"
+    element={
+        <PrivateRoute>
+            <Resume />
+        </PrivateRoute>
+    }
+/>
       </Routes>
       
     </>
