@@ -2,11 +2,31 @@ const mongoose = require("mongoose");
 
 const resumeSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    fileUrl: { type: String, required: true },
-    fileName: { type: String },
-    rawText: { type: String },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    fileUrl: {
+      type: String,
+      required: true,
+    },
+
+    fileName: {
+      type: String,
+    },
+
+    publicId: {
+      type: String,
+    },
+
+    rawText: {
+      type: String,
+    },
+
     skills: [{ type: String }],
+
     projects: [
       {
         title: String,
@@ -14,6 +34,7 @@ const resumeSchema = new mongoose.Schema(
         techStack: [String],
       },
     ],
+
     experience: [
       {
         company: String,
@@ -22,6 +43,7 @@ const resumeSchema = new mongoose.Schema(
         description: String,
       },
     ],
+
     education: [
       {
         institution: String,
@@ -29,8 +51,15 @@ const resumeSchema = new mongoose.Schema(
         year: String,
       },
     ],
-    yearsOfExperience: { type: Number, default: 0 },
-    parsedAt: { type: Date },
+
+    yearsOfExperience: {
+      type: Number,
+      default: 0,
+    },
+
+    parsedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

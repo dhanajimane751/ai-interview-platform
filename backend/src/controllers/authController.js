@@ -125,33 +125,53 @@ const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ success: false, message: "Invalid email or password" });
+
+    if (
+      !user ||
+      !(await user.matchPassword(password))
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
     }
 
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
-        message: "Please verify your email before logging in.",
+        message:
+          "Please verify your email before logging in.",
       });
     }
 
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const accessToken =
+      generateAccessToken(user._id);
+
+    const refreshToken =
+      generateRefreshToken(user._id);
 
     user.refreshToken = refreshToken;
+
     await user.save();
 
     res.cookie("token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure:
+        process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge:
+        7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
       success: true,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar || "",
+      },
       accessToken,
     });
   } catch (error) {

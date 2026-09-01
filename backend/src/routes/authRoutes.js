@@ -17,10 +17,14 @@ const router = express.Router();
 const passport = require("passport");
 const { generateAccessToken } = require("../utils/generateToken");
 const { CLIENT_URL } = require("../config/env");
+const { authLimiter } = require("../middlewares/rateLimiter");
+
+
 
 
 router.post(
   "/register",
+  authLimiter,
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("email").isEmail().withMessage("Valid email is required"),
@@ -32,6 +36,7 @@ router.post(
 
 router.post(
   "/login",
+  authLimiter,
   [
     body("email").isEmail().withMessage("Valid email is required"),
     body("password").notEmpty().withMessage("Password is required"),
@@ -40,12 +45,12 @@ router.post(
   loginUser
 );
 
-router.get("/verify-email/:token", verifyEmail);
-router.post("/resend-verification", resendVerification);
+router.get("/verify-email/:token", authLimiter ,verifyEmail);
+router.post("/resend-verification", authLimiter, resendVerification);
 router.post("/logout", protect, logoutUser);
 router.get("/me", protect, getMe);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+router.post("/forgot-password", authLimiter, forgotPassword);
+router.post("/reset-password/:token", authLimiter, resetPassword);
 
 
 

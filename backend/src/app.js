@@ -6,10 +6,11 @@ const { CLIENT_URL } = require("./config/env");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const session = require("express-session");
 const passport = require("./config/passport");
-
+const { globalLimiter } = require("./middlewares/rateLimiter");
 
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(
   session({
     secret: require("./config/env").SESSION_SECRET,
@@ -25,10 +26,11 @@ app.use(cors({ origin: CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use("/api", globalLimiter);
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", message: "Server is running" });
 });
+
 
 // Routes will be mounted here as we build them
 app.use("/api/auth", require("./routes/authRoutes"));
@@ -36,7 +38,10 @@ app.use("/api/interviews", require("./routes/interviewRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/companies", require("./routes/companyRoutes"));
 app.use("/api/speech", require("./routes/speechRoutes"));
+app.use("/api/profile", require("./routes/profileRoutes"));
+app.use("/api/resumes", require("./routes/resumeRoutes"));
 
 app.use(errorMiddleware);
+
 
 module.exports = app;
