@@ -1,7 +1,7 @@
 # 🤖 MockAI — AI Mock Interview Platform
 
 > Practice realistic interviews with an AI interviewer and improve after every session.
-**Live Demo:**
+## Live Demo:
 https://ai-interview-platform-dm.vercel.app/
 ## ✨ Features
 
