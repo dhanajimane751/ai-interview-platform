@@ -2,8 +2,6 @@
 
 > Practice realistic interviews with an AI interviewer and improve after every session.
 
-\
-
 ## ✨ Features
 
 * 🤖 AI-generated technical mock interviews
