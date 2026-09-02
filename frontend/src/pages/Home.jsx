@@ -610,7 +610,7 @@ export default function Home() {
 
               <div className="flex items-center gap-2">
                 <a
-                  href="https://github.com/dhanajimane"
+                  href="https://github.com/dhanajimane751/ai-interview-platform"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub"
@@ -620,7 +620,7 @@ export default function Home() {
                 </a>
 
                 <a
-                  href="https://linkedin.com/in/dhanajimane"
+                  href="https://www.linkedin.com/in/dhanaji-mane-301302349"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
@@ -640,7 +640,7 @@ export default function Home() {
             <p className="text-ink-muted text-xs">
               Designed & built by{" "}
               <a
-                href="https://github.com/dhanajimane"
+                href="https://github.com/dhanajimane751/ai-interview-platform"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-signal hover:underline font-medium"
