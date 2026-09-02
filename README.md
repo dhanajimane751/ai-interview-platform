@@ -1,550 +1,213 @@
 # 🤖 MockAI — AI Mock Interview Platform
 
-> **Practice interviews. Build confidence. Get better with every attempt.**
+> Practice realistic interviews with an AI interviewer and improve after every session.
 
-MockAI is a full-stack AI-powered mock interview platform that helps developers and job seekers practice realistic interviews with an AI interviewer.
-
-It combines **AI-powered conversations, voice interaction, resume-based questions, interview monitoring, and performance analysis** into one platform.
-
----
+\
 
 ## ✨ Features
 
-### 🎤 AI-Powered Interviews
+* 🤖 AI-generated technical mock interviews
+* 📄 Resume-based interview questions
+* 🧠 Dynamic follow-up questions
+* 🎤 Voice-based interview interaction
+* 📝 Speech-to-text transcription
+* 🔊 AI interviewer text-to-speech
+* 🎥 Webcam-based face detection
+* 👀 Tab switch, focus loss and fullscreen monitoring
+* 📊 AI-generated interview reports
+* 📈 Interview history and performance tracking
+* 🔐 Email/password authentication
+* 🔵 Google OAuth login
+* 🔑 Email verification and password reset
+* 👤 Profile and avatar management
+* ⚙️ Voice, theme and interview preferences
+* 🌙 Light / Dark mode
 
-Practice realistic technical and behavioral interviews with an AI interviewer that dynamically interacts with your responses.
+## 🛠️ Tech Stack
 
-### 🗣️ Voice-Based Interaction
+### Frontend
 
-Answer interview questions naturally using your voice and simulate a real interview environment.
-
-### 📄 Resume-Based Interviews
-
-Upload your resume and practice personalized questions based on your:
-
-* Skills
-* Projects
-* Experience
-* Education
-* Technologies
-
-### 🧠 Adaptive Follow-Up Questions
-
-The AI can continue the conversation with follow-up questions based on your previous answers.
-
-### 📊 Interview Performance Analysis
-
-Get insights into your interview performance, including:
-
-* Communication
-* Clarity
-* Confidence
-* Technical Knowledge
-* Answer Structure
-* Problem Solving
-
-### 👀 Interview Monitoring
-
-The platform can monitor the interview environment using features such as:
-
-* Webcam monitoring
-* Face detection
-* Tab/fullscreen monitoring
-* Interview warnings
-
-### 🔐 Authentication
-
-Secure authentication with:
-
-* Email & Password
-* Google OAuth
-* Protected routes
-* JWT-based authentication
-
-### 📈 Interview Reports
-
-Review your interview after completion and identify areas that need improvement.
-
-### 🎯 Personalized Practice
-
-Practice according to the role and interview type you are preparing for.
-
----
-
-# 🛠️ Tech Stack
-
-## Frontend
-
-* React.js
+* React 18
 * Vite
 * Tailwind CSS
 * Framer Motion
 * React Router
-* Lucide Icons
+* Redux Toolkit
+* Axios
+* React Hook Form
+* Recharts
+* React Webcam
+* Lucide React
+* face-api.js
 
-## Backend
+### Backend
 
 * Node.js
 * Express.js
 * MongoDB
 * Mongoose
 * JWT
-* Google OAuth
+* Passport.js
+* Google OAuth 2.0
+* Groq SDK
+* Multer
+* pdf-parse
+* Cloudinary
+* Brevo
+* Helmet
+* Express Rate Limit
 
-## AI & Interview Technology
+## 🎙️ Voice & AI
 
-* AI-generated interview questions
-* AI response evaluation
-* Voice interaction
-* Resume analysis
-* Adaptive interview flow
+### AI Interview Generation
 
-## Deployment
+**Groq API** is used for generating interview questions, follow-up questions and interview reports.
 
-* Vercel — Frontend
-* Render — Backend
-* MongoDB Atlas / MongoDB
+### Speech Capture
 
----
+The browser **Web Speech API (****`SpeechRecognition`**** / ****`webkitSpeechRecognition`****)** captures spoken answers and converts them into text.
 
-# 🏗️ Project Architecture
+### AI Interviewer Voice
+
+The browser **Web Speech API (****`speechSynthesis`****)** generates the interviewer's spoken voice using voices available on the user's device.
+
+### Audio Recording
+
+The **MediaRecorder API** and `getUserMedia()` are used for microphone audio capture.
+
+### Audio Transcription
+
+Uploaded audio can be transcribed on the backend using:
+
+`Groq Whisper — whisper-large-v3-turbo`
+
+## 👁️ Face Detection & Proctoring
+
+Face detection is implemented with:
+
+**face-api.js + Tiny Face Detector**
+
+The project includes the Tiny Face Detector model files:
 
 ```text
-MockAI
+frontend/public/models/
+├── tiny_face_detector_model-weights_manifest.json
+└── tiny_face_detector_model-shard1
+```
+
+The system detects:
+
+* No face
+* Multiple faces
+* Single visible face
+
+It also records:
+
+* Tab switches
+* Window focus loss
+* Fullscreen exits
+* Camera errors
+* Microphone errors
+* Face-detection warnings
+
+## 📄 Resume Processing
+
+Users can upload a PDF resume.
+
+The backend uses **pdf-parse** to extract resume text, which is then provided as context to the AI interview system.
+
+## 📊 Interview Reports
+
+After an interview, the platform generates an AI report containing scores and feedback for areas such as:
+
+* Technical knowledge
+* Communication
+* Confidence
+* Grammar
+* Professionalism
+* Problem solving
+* Voice
+* Eye contact
+* Time management
+* Proctoring
+
+It also provides strengths, weaknesses, improvements and an overall interview rating.
+
+## 🔐 Authentication
+
+* JWT authentication
+* HTTP-only cookies
+* Google OAuth 2.0
+* Email verification
+* Password reset
+* Protected routes
+* Rate limiting
+
+## 🏗️ Project Structure
+
+```text
+ai-interview-platform/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── context/
+│   │   ├── redux/
+│   │   └── routes/
+│   └── public/models/
 │
-├── frontend
-│   ├── src
-│   │   ├── components
-│   │   ├── pages
-│   │   ├── hooks
-│   │   ├── services
-│   │   ├── context
-│   │   └── App.jsx
-│   │
-│   ├── public
-│   ├── package.json
-│   └── vite.config.js
-│
-├── backend
-│   ├── src
-│   │   ├── controllers
-│   │   ├── models
-│   │   ├── routes
-│   │   ├── middleware
-│   │   ├── services
-│   │   └── utils
-│   │
-│   ├── package.json
-│   └── server.js
+├── backend/
+│   └── src/
+│       ├── controllers/
+│       ├── models/
+│       ├── routes/
+│       ├── services/
+│       ├── middlewares/
+│       └── config/
 │
 └── README.md
 ```
 
----
+## 🚀 Run Locally
 
-# 🚀 Getting Started
-
-## 1. Clone the Repository
+### Clone
 
 ```bash
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/dhanajimane751/ai-interview-platform.git
+cd ai-interview-platform
 ```
-
-```bash
-cd your-repository
-```
-
----
-
-# 💻 Frontend Setup
-
-Navigate to the frontend:
-
-```bash
-cd frontend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Create a `.env` file:
-
-```env
-VITE_API_URL=http://localhost:5000
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Frontend will typically run on:
-
-```text
-http://localhost:5173
-```
-
----
-
-# ⚙️ Backend Setup
-
-Open another terminal and navigate to:
-
-```bash
-cd backend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Create a `.env` file:
-
-```env
-PORT=5000
-
-MONGO_URI=your_mongodb_connection_string
-
-JWT_SECRET=your_jwt_secret
-
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-FRONTEND_URL=http://localhost:5173
-```
-
-Start the backend:
-
-```bash
-npm run dev
-```
-
-Backend will run on:
-
-```text
-http://localhost:5000
-```
-
----
-
-# 🔑 Environment Variables
-
-Never commit your `.env` file to GitHub.
-
-Example:
-
-```env
-PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_secret
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-FRONTEND_URL=your_frontend_url
-```
-
-Add this to `.gitignore`:
-
-```gitignore
-.env
-.env.local
-node_modules
-dist
-```
-
----
-
-# 🔄 How MockAI Works
-
-```text
-               ┌─────────────────┐
-               │     User        │
-               └────────┬────────┘
-                        │
-                        ▼
-              ┌──────────────────┐
-              │ Select Interview  │
-              │ Role / Difficulty │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │ Resume Analysis   │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │  AI Interviewer   │
-              └────────┬─────────┘
-                       │
-              ┌────────▼─────────┐
-              │ Voice / Answer    │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │ AI Evaluation     │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │ Follow-up Question│
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐
-              │ Interview Report  │
-              └──────────────────┘
-```
-
----
-
-# 🎥 Interview Experience
-
-The platform is designed to simulate an actual interview rather than simply displaying a list of questions.
-
-### Typical flow
-
-```text
-Start Interview
-      ↓
-AI asks question
-      ↓
-Candidate answers
-      ↓
-AI analyzes response
-      ↓
-AI asks follow-up
-      ↓
-Conversation continues
-      ↓
-Interview ends
-      ↓
-Performance report
-```
-
----
-
-# 📊 Performance Dashboard
-
-After completing an interview, users can review their performance and identify areas for improvement.
-
-Example evaluation areas:
-
-```text
-Communication     █████████████████░░░  86%
-Confidence        ████████████████░░░░  81%
-Clarity           ██████████████████░░  90%
-Problem Solving   █████████████████░░░  87%
-Technical Depth   ██████████████████░░  91%
-```
-
----
-
-# 🔐 Security
-
-MockAI uses several security mechanisms to protect user accounts and application data.
-
-* JWT authentication
-* Password hashing
-* Protected API routes
-* Google OAuth
-* Environment variables for secrets
-* CORS configuration
-* Authenticated frontend routes
-
----
-
-# 📱 Responsive Design
-
-MockAI is designed to work across:
-
-* 💻 Desktop
-* 🖥️ Large screens
-* 📱 Mobile
-* 📲 Tablet
-
-The interview interface adapts to different screen sizes while keeping the core experience accessible.
-
----
-
-# 🎨 UI & UX
-
-The platform focuses on a modern SaaS-style interface with:
-
-* Responsive layouts
-* Dark / light appearance
-* Smooth transitions
-* Framer Motion animations
-* Interactive interview interface
-* Modern typography
-* Clean dashboard components
-* Product-focused landing page
-
----
-
-# 🌐 Deployment
 
 ### Frontend
 
-The React frontend can be deployed using:
-
-```text
-Vercel
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ### Backend
 
-The Node.js backend can be deployed using:
-
-```text
-Render
-```
-
-### Database
-
-MongoDB can be hosted using:
-
-```text
-MongoDB Atlas
-```
-
-Typical production architecture:
-
-```text
-             ┌──────────────┐
-             │   Vercel     │
-             │   Frontend   │
-             └──────┬───────┘
-                    │
-                    ▼
-             ┌──────────────┐
-             │    Render    │
-             │   Backend    │
-             └──────┬───────┘
-                    │
-                    ▼
-             ┌──────────────┐
-             │   MongoDB    │
-             │     Atlas    │
-             └──────────────┘
-```
-
----
-
-# 🧪 Development
-
-Run frontend:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Run backend:
-
 ```bash
 cd backend
+npm install
 npm run dev
 ```
 
-Build frontend:
+Create the required environment variables for MongoDB, JWT, Groq, Google OAuth, Cloudinary, email services and frontend/backend URLs.
 
-```bash
-npm run build
-```
+## 🌐 Live
 
-Preview production build:
+**Live Demo:**
+https://ai-interview-platform-dm.vercel.app/
 
-```bash
-npm run preview
-```
+**GitHub:**
+https://github.com/dhanajimane751/ai-interview-platform
 
----
-
-# 🗂️ Core Modules
-
-| Module            | Purpose                           |
-| ----------------- | --------------------------------- |
-| Authentication    | User registration and login       |
-| Google OAuth      | Social authentication             |
-| Interview Setup   | Configure interview               |
-| Resume            | Upload and use resume information |
-| AI Interviewer    | Conduct interview                 |
-| Voice Interaction | Speech-based answers              |
-| Proctoring        | Monitor interview environment     |
-| Evaluation        | Analyze answers                   |
-| Reports           | Display performance               |
-| Dashboard         | Manage interview history          |
-
----
-
-# 🔮 Future Improvements
-
-Some possible improvements for future versions:
-
-* Real-time AI voice conversations
-* More specialized interview models
-* Coding interview mode
-* Live coding editor
-* Company-specific interview preparation
-* Interview history comparison
-* Advanced analytics
-* Personalized learning paths
-* Multi-language interviews
-* More realistic AI interviewer personalities
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome.
-
-```bash
-git fork
-git clone
-git checkout -b feature/new-feature
-git commit -m "Add new feature"
-git push origin feature/new-feature
-```
-
-Then open a Pull Request.
-
----
-
-# 📜 License
-
-This project is intended for learning, portfolio, and educational purposes.
-
----
-
-# ⭐ Project
+## 👨‍💻 Project
 
 **MockAI — AI Mock Interview Platform**
 
-Built to help candidates practice interviews, understand their weaknesses, and become more confident before the real interview.
+Built with React, Node.js, MongoDB, Groq, face-api.js and modern web technologies.
 
 > **Don't just prepare answers. Practice the interview.**
-
----
-
-## 💡 Why MockAI?
-
-Traditional interview preparation often looks like:
-
-```text
-Read questions → Memorize answers → Hope for the best
-```
-
-MockAI changes that into:
-
-```text
-Practice → Speak → Get feedback → Improve → Repeat
-```
-
-### 🚀 Practice smarter. Interview better.
